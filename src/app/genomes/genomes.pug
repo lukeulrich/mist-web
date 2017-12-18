@@ -8,4 +8,6 @@ form
     (onQueryChange)="search($event)"
   )
 
-mist-genomes-list([genomes]="genomes$ | async")
+//mist-genomes-list([genomes]="genomes$ | async")
+mist-genomes-list([genomes]="dataSource" [displayedColumns]="displayedColumns" (pageEvent)="pageApply($event)" 
+[count]="count" [perPage]="perPage" [currentPage]="currentPage" [query]="query$ | async")

@@ -1,2 +1,31 @@
-ul
+//ul
   li(*ngFor="let genome of genomes") {{ genome.name }}
+
+div(*ngIf="query")
+  mat-paginator([length]="count" [pageSize]="perPage" [pageIndex]="currentPage-1" [pageSizeOptions]="pageSizeOptions" (page)="pageChanged($event)")
+  mat-table([dataSource]="genomes" class="genome-table")
+    ng-container(matColumnDef="Genome")
+      mat-header-cell(*matHeaderCellDef) Genome
+      mat-cell(*matCellDef="let genome")
+        a(routerLink="/genomes/{{genome.version}}") {{genome.name}}
+    ng-container(matColumnDef="Superkingdom")
+      mat-header-cell(*matHeaderCellDef) Superkingdom
+      mat-cell(*matCellDef="let genome") {{genome.superkingdom}}
+    ng-container(matColumnDef="Taxonomy")
+      mat-header-cell(*matHeaderCellDef) Taxonomy
+      mat-cell(*matCellDef="let genome")
+        mat-select([value]="selected" class="taxonomy")
+          mat-option(value="phylum") {{genome.phylum}}
+          mat-option(value="class") {{genome.class}}
+          mat-option(value="order") {{genome.order}}
+          mat-option(value="family") {{genome.family}}
+          mat-option(value="genus") {{genome.genus}}
+    ng-container(matColumnDef="Genbank Version")
+      mat-header-cell(*matHeaderCellDef) Genbank Version
+      mat-cell(*matCellDef="let genome") {{genome.genbank_version}}
+    ng-container(matColumnDef="Assembly level")
+      mat-header-cell(*matHeaderCellDef) Assembly level
+      mat-cell(*matCellDef="let genome") {{genome.assembly_level}}
+    mat-header-row(*matHeaderRowDef="displayedColumns")
+    mat-row(*matRowDef="let row; columns: displayedColumns;")
+

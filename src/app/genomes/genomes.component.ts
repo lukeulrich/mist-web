@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
 import 'rxjs/add/operator/take';
 import { Observable } from 'rxjs/Observable';
-
-import { Search } from './genomes.actions';
+import {DataSource} from '@angular/cdk/collections';
+import { Search, FirstPage, LastPage, PrevPage, NextPage } from './genomes.actions';
 import * as fromGenomes from './genomes.selectors';
 
 @Component({
@@ -17,7 +17,15 @@ export class GenomesComponent implements OnInit {
   isFetching$: Observable<boolean>;
   errorMessage$: Observable<string>;
   genomes$: Observable<any[]>;
-
+  links$: Observable<any>;
+  count: number;
+  totalPages: number;
+  perPage: number;
+  currentPage: number;
+  dataSource = new GenomeDataSource(this.store);
+  columns = ['Genome', 'Superkingdom', 'Taxonomy', 'Genbank Version', 'Assembly level'];
+  displayedColumns: String[];
+  
   constructor(
     private store: Store<any>,
   ) {}
@@ -27,10 +35,45 @@ export class GenomesComponent implements OnInit {
     this.isFetching$ = this.store.select(fromGenomes.getSearchIsFetching);
     this.errorMessage$ = this.store.select(fromGenomes.getSearchErrorMessage);
     this.genomes$ = this.store.select(fromGenomes.getSearchResults);
+    this.links$ = this.store.select(fromGenomes.getPageLinks);
+    this.store.select(fromGenomes.getPageInfo).subscribe(
+      pageInfo => {
+        pageInfo.count ? this.count = pageInfo.count : this.count = 1;
+        pageInfo.currentPage ? this.currentPage = pageInfo.currentPage : this.currentPage = 1;
+        pageInfo.totalPages ? this.totalPages = pageInfo.totalPages : this.totalPages = 5;
+        pageInfo.perPage ? this.perPage = pageInfo.perPage: this.perPage = 10;
+      }
+    );
+    this.genomes$.subscribe(results => results.length > 0 ? this.displayedColumns = this.columns : this.displayedColumns = null);
+  }
+
+  pageApply($event) {
+    let eventPageIndex = ++$event.pageIndex;
+    if ($event.pageSize != this.perPage) {
+      this.perPage = $event.pageSize;
+      this.query$.subscribe(val => this.search(val)).unsubscribe();
+    } else if (eventPageIndex > this.currentPage) {
+      this.links$.subscribe(link => this.store.dispatch(new NextPage(link.next))).unsubscribe();
+    } else if (eventPageIndex < this.currentPage) {
+      this.links$.subscribe(link => this.store.dispatch(new PrevPage(link.prev))).unsubscribe();
+    } else if (eventPageIndex === 1) {
+      this.links$.subscribe(link => this.store.dispatch(new FirstPage(link.first))).unsubscribe();
+    } else if (eventPageIndex === this.totalPages) {
+      this.links$.subscribe(link => this.store.dispatch(new LastPage(link.last))).unsubscribe();
+    }
   }
 
   search(query: string) {
-    console.log('Searching for', query);
-    this.store.dispatch(new Search(query));
+    this.store.dispatch(new Search({search: query, perPage: this.perPage, pageIndex: this.currentPage}));  
   }
+}
+
+export class GenomeDataSource extends DataSource<any> {
+  constructor(private store: Store<any>) {
+    super();
+  }
+  connect(): Observable<any[]> {
+    return this.store.select(fromGenomes.getSearchResults);
+  }
+  disconnect() {}
 }
