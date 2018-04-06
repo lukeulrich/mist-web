@@ -1,0 +1,24 @@
+$padd: 0;
+$padd-left: 1em;
+
+.aseq-details {
+    text-align: right;
+    padding: $padd;
+    padding-left: $padd-left;
+}
+
+.domains {
+    padding-left: $padd-left;
+}
+
+
+
+div.details {
+    padding-top: 1.2em;
+    padding-left: $padd-left;
+    max-width: 40%;
+}
+
+div.protSeq {
+    width: 2em;
+}

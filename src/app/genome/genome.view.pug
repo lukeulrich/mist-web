@@ -1,0 +1,20 @@
+div(*ngIf="genomeViewModel")
+    table(class="u-full-width")
+        thead
+            tr
+                th(colspan=2) 
+                    h5 Genome Summary
+        tbody
+            tr  
+                td Taxonomy
+                td 
+                    span(*ngFor="let taxon of genomeViewModel.taxonomy")
+                        span(*ngIf="taxon.level != 'genus'; else genusBlock" ) {{ taxon.value }},{{" "}} 
+                        ng-template(#genusBlock) {{ taxon.value }}
+            tr(*ngFor="let property of genomeViewModel.mainInfo")
+                td {{ property.name }}
+                td(*ngIf="property.ftp_path; else notFtpBlock") 
+                    a(href="{{property.ftp_path}}") {{ property.value }}
+                ng-template(#notFtpBlock) 
+                    td {{ property.value }}
+

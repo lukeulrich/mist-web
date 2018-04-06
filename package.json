@@ -26,7 +26,12 @@
     "@angular/router": "^4.2.4",
     "@ngrx/effects": "^4.1.0",
     "@ngrx/store": "^4.0.3",
+    "@types/query-string": "^5.0.1",
     "core-js": "^2.4.1",
+    "d3-ng2-service": "^2.0.0",
+    "domain-gfx": "^0.2.0",
+    "lodash": "^4.17.5",
+    "query-string": "^5.0.1",
     "rxjs": "^5.4.3",
     "zone.js": "^0.8.14"
   },
@@ -73,7 +78,7 @@
     "stylus-loader": "^3.0.1",
     "ts-node": "~3.2.0",
     "tslint": "~5.3.2",
-    "typescript": "~2.3.3",
+    "typescript": "~2.5.1",
     "url-loader": "^0.5.7",
     "webpack": "~3.4.1",
     "webpack-dev-server": "~2.5.1"
