@@ -5,15 +5,18 @@ import { Action, Store } from '@ngrx/store';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/skip';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/takeUntil';
+import 'rxjs/add/operator/withLatestFrom';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
+import { HeaderName } from '../core/header-names';
 import { MistApi } from '../core/services/mist-api.service';
 import * as genomes from './genomes.actions';
-import { pageUrl, search } from './genomes.selectors';
+import { getLocalMatches, pageUrl, search } from './genomes.selectors';
 
 @Injectable()
 export class GenomesEffects {
@@ -22,15 +25,22 @@ export class GenomesEffects {
   @Effect()
   search$: Observable<Action> = this.actions$
     .ofType<genomes.Search>(genomes.SEARCH)
-    .debounceTime(GenomesEffects.DEBOUNCE_TIME_MS)
     .map((action) => action.payload)
-    .map((query: string) => {
-      const url = this.mistApi.searchGenomesUrl(query);
+    .withLatestFrom(this.store.select(search))
+    .map(([query, searchState]) => {
+      const url = this.mistApi.searchGenomesUrl(query, searchState);
       return new genomes.Fetch(url);
     });
 
   @Effect()
+  localMatches$: Observable<Action> = this.actions$
+    .ofType<genomes.LocalMatches>(genomes.SEARCH)
+    .switchMap(() => this.store.select(getLocalMatches).take(1))
+    .map((accessions) => new genomes.LocalMatches(accessions));
+
+  @Effect()
   fetch$: Observable<Action> = this.actions$.ofType<genomes.Fetch>(genomes.FETCH)
+    .debounceTime(GenomesEffects.DEBOUNCE_TIME_MS)
     .map((action) => action.payload)
     .switchMap((url) => {
       const nextFetch$ = this.actions$.ofType<genomes.Fetch>(genomes.FETCH).skip(1);
@@ -39,12 +49,12 @@ export class GenomesEffects {
         .takeUntil(nextFetch$)
         .map((response) => {
           // TODO
-          // a) Extract the links, count, currentPage, totalPages
+          // a) Extract the links, count, page
           // c) Abstract into helper functions
           const matches = response.json();
           return new genomes.FetchDone({
-            count: parseInt(response.headers.get('x-total-count'), 10),
             matches,
+            totalCount: parseInt(response.headers.get(HeaderName.TotalCount), 10),
           });
         })
         .catch((error) => of(new genomes.FetchError(error.message)));

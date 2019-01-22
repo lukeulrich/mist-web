@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
+import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/take';
 import { Observable } from 'rxjs/Observable';
 

@@ -1,33 +1,26 @@
+import { assign, map } from 'lodash';
+
 import * as Genomes from './genomes.actions';
 
 export interface State {
-  search: {
-    count: number;
-    currentPage: number;
-    errorMessage: string;
-    isFetching: boolean;
-    links: {
-      first?: string;
-      last?: string;
-      next?: string;
-      prev?: string;
-    },
-    matches: any[];
-    query: string;
-    totalPages: number;
+  all: {
+    [accession: string]: Genome,
   };
+  search: GenomesSearch;
 }
 
 const initialState: State = {
+  all: {},
   search: {
-    count: null,
-    currentPage: null,
+    count: true,
     errorMessage: null,
     isFetching: false,
     links: {},
     matches: [],
+    page: null,
+    perPage: 30,
     query: null,
-    totalPages: null,
+    totalCount: null,
   },
 };
 
@@ -38,15 +31,23 @@ export const reducer = (state = initialState, action: Genomes.Actions) => {
         ...state,
         search: {
           ...state.search,
-          count: null,
-          currentPage: null,
-          isFetching: false,
           links: {},
           matches: [],
+          page: null,
           query: action.payload,
-          totalPages: null,
+          totalCount: null,
         },
     };
+
+    case Genomes.LOCAL_MATCHES:
+      return {
+        ...state,
+        search: {
+          ...state.search,
+          matches: action.payload,
+          page: action.payload.length ? 0 : null,
+        },
+      };
 
     case Genomes.FETCH:
       const url = action.payload;
@@ -57,7 +58,6 @@ export const reducer = (state = initialState, action: Genomes.Actions) => {
             ...state.search,
             errorMessage: null,
             isFetching: true,
-            matches: [],
           },
         };
       }
@@ -65,16 +65,19 @@ export const reducer = (state = initialState, action: Genomes.Actions) => {
 
     case Genomes.FETCH_DONE:
       const { payload } = action;
+      const { matches: genomes } = payload;
       return {
         ...state,
+        all: assign({}, state.all, genomes.reduce((result, genome) => {
+            result[genome.accession] = genome;
+            return result;
+          }, {})),
         search: {
           ...state.search,
-          count: payload.count,
-          currentPage: payload.currentPage,
           isFetching: false,
           links: payload.links,
-          matches: payload.matches,
-          totalPages: payload.totalPages,
+          matches: map(genomes, 'accession'),
+          totalCount: payload.totalCount,
         },
       };
 
@@ -85,6 +88,18 @@ export const reducer = (state = initialState, action: Genomes.Actions) => {
           ...state.search,
           errorMessage: action.payload,
           isFetching: false,
+        },
+      };
+
+    case Genomes.NEXT_PAGE:
+      if (!state.search.links.next) {
+        break;
+      }
+      return {
+        ...state,
+        search: {
+          ...state.search,
+          page: state.search.page + 1,
         },
       };
   }

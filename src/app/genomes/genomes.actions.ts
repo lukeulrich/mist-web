@@ -1,6 +1,7 @@
 import { Action } from '@ngrx/store';
 
 export const SEARCH = '[Genomes] Search';
+export const LOCAL_MATCHES = '[Genomes] Local Matches';
 export const NEXT_PAGE = '[Genomes] Next Page';
 export const PREV_PAGE = '[Genomes] Prev Page';
 export const FIRST_PAGE = '[Genomes] First Page';
@@ -13,6 +14,12 @@ export class Search implements Action {
   readonly type = SEARCH;
 
   constructor(public payload: string) {}
+}
+
+export class LocalMatches implements Action {
+  readonly type = LOCAL_MATCHES;
+
+  constructor(public payload: Accession[]) {}
 }
 
 export class FirstPage implements Action {
@@ -51,6 +58,7 @@ export class FetchError implements Action {
 
 export type Actions =
   Search
+  | LocalMatches
   | FirstPage
   | LastPage
   | NextPage
